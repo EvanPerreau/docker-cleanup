@@ -28,7 +28,7 @@ A powerful CLI tool designed to simplify Docker resource cleanup and recover dis
 
 ## 📋 Requirements
 
-- Go 1.16+
+- Go 1.23+
 - Docker installed and running
 
 ## 🔧 Installation
