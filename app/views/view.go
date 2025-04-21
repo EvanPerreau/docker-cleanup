@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
+	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
 )
 
@@ -211,4 +212,36 @@ func FormatSize(size uint64) string {
 	default:
 		return fmt.Sprintf("%d B", size)
 	}
+}
+
+// ShowBuilds affiche la liste des builds
+func (v *View) ShowBuilds(builds []types.BuildCache, dryRun bool) {
+	if len(builds) == 0 {
+		fmt.Println("Aucun build à nettoyer.")
+		return
+	}
+
+	mode := "[DRY RUN] "
+	if !dryRun {
+		mode = ""
+	}
+
+	fmt.Printf("%sBuilds qui seraient supprimés (%d):\n", mode, len(builds))
+	for _, build := range builds {
+		fmt.Printf("- %s: %s\n", build.ID[:12], build.Description)
+	}
+}
+
+// ShowBuildsPruneResult affiche le résultat du nettoyage des builds
+func (v *View) ShowBuildsPruneResult(report *types.BuildCachePruneReport) {
+	if len(report.CachesDeleted) == 0 {
+		fmt.Println("Aucun build n'a été supprimé.")
+		return
+	}
+
+	fmt.Printf("Builds supprimés (%d):\n", len(report.CachesDeleted))
+	for _, id := range report.CachesDeleted {
+		fmt.Printf("- %s\n", id[:12])
+	}
+	fmt.Printf("Espace libéré: %s\n", humanize.Bytes(uint64(report.SpaceReclaimed)))
 }
