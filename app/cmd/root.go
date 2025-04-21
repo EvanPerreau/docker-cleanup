@@ -18,6 +18,12 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolVar(&controllers.GetConfig().ShowSize, "show-size", false, "Show size of resources (default: false)")
 
 	rootCmd.AddCommand(containersCmd)
+	rootCmd.AddCommand(imagesCmd)
+	rootCmd.AddCommand(networksCmd)
+	rootCmd.AddCommand(volumesCmd)
+	rootCmd.AddCommand(danglingImagesCmd)
+	rootCmd.AddCommand(allCmd)
+	rootCmd.AddCommand(buildsCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
