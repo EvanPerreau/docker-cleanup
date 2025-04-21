@@ -118,6 +118,7 @@ func (c *Controller) RunDanglingCleanup() {
 
 // RunVolumeCleanup exécute le nettoyage des volumes non utilisés
 func (c *Controller) RunVolumeCleanup() {
+
 	if GetConfig().ShowSize {
 		c.ShowDiskUsage()
 	}
@@ -181,6 +182,8 @@ func (c *Controller) RunAllCleanup() {
 	c.RunVolumeCleanup()
 	fmt.Println()
 	c.RunNetworkCleanup()
+	fmt.Println()
+	c.RunBuildsCleanup()
 
 	c.view.ShowCleanupComplete()
 }
@@ -194,4 +197,31 @@ func (c *Controller) ShowDiskUsage() {
 	}
 
 	c.view.ShowDiskUsage(diskUsage)
+}
+
+// RunBuildsCleanup exécute le nettoyage des builds Docker non utilisés
+func (c *Controller) RunBuildsCleanup() {
+	if GetConfig().ShowSize {
+		c.ShowDiskUsage()
+	}
+
+	c.view.ShowTitle("Suppression des builds Docker...")
+
+	if GetConfig().DryRun {
+		builds, err := c.model.GetUnusedBuilds()
+		if err != nil {
+			c.view.ShowError(fmt.Errorf("erreur lors de la récupération des builds: %v", err))
+			return
+		}
+
+		c.view.ShowBuilds(builds, true)
+	} else {
+		report, err := c.model.PruneBuilds(GetConfig().OlderThan)
+		if err != nil {
+			c.view.ShowError(fmt.Errorf("erreur lors de la suppression des builds: %v", err))
+			return
+		}
+
+		c.view.ShowBuildsPruneResult(report)
+	}
 }
