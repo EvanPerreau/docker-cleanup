@@ -37,10 +37,13 @@ A powerful CLI tool designed to simplify Docker resource cleanup and recover dis
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/docker-cleanup.git
+git clone https://github.com/EvanPerrea/docker-cleanup.git
 
 # Navigate to the directory
 cd docker-cleanup
+
+# Navigate to the app directory
+cd app
 
 # Build the binary
 go build -o docker-cleanup
@@ -128,10 +131,10 @@ The application follows a clean architecture pattern:
 
 ```
 app/
-├── cmd/         # Command handlers for CLI interface
-├── controllers/ # Business logic layer
-├── models/      # Data access layer (Docker API interactions)
-└── views/       # Presentation layer
+├── cmd/
+├── controllers/
+├── models/
+└── views/
 ```
 
 ## 🤝 Contributing
