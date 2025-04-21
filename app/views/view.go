@@ -12,14 +12,14 @@ import (
 	"github.com/fatih/color"
 )
 
-// View représente l'interface utilisateur
+// View represents the user interface
 type View struct {
 	YellowText func(format string, a ...interface{}) string
 	GreenText  func(format string, a ...interface{}) string
 	RedText    func(format string, a ...interface{}) string
 }
 
-// NewView crée une nouvelle instance de View
+// NewView creates a new View instance
 func NewView() *View {
 	return &View{
 		YellowText: color.New(color.FgYellow).SprintfFunc(),
@@ -28,29 +28,29 @@ func NewView() *View {
 	}
 }
 
-// ShowTitle affiche un titre coloré
+// ShowTitle displays a colored title
 func (v *View) ShowTitle(title string) {
 	fmt.Println(v.YellowText(title))
 }
 
-// ShowSuccess affiche un message de succès
+// ShowSuccess displays a success message
 func (v *View) ShowSuccess(message string) {
 	fmt.Println(v.GreenText(message))
 }
 
-// ShowError affiche un message d'erreur
+// ShowError displays an error message
 func (v *View) ShowError(err error) {
-	fmt.Println(v.RedText("Erreur: %v", err))
+	fmt.Println(v.RedText("Error: %v", err))
 }
 
-// ShowDiskUsage affiche l'utilisation du disque
+// ShowDiskUsage displays disk usage
 func (v *View) ShowDiskUsage(diskUsage *types.DiskUsage) {
-	v.ShowTitle("Taille actuelle utilisée par Docker :")
+	v.ShowTitle("Current Docker disk usage:")
 
-	fmt.Println("Conteneurs :", len(diskUsage.Containers))
-	fmt.Println("Images      :", len(diskUsage.Images))
-	fmt.Println("Volumes     :", len(diskUsage.Volumes))
-	fmt.Println("Builds      :", len(diskUsage.BuildCache))
+	fmt.Println("Containers :", len(diskUsage.Containers))
+	fmt.Println("Images     :", len(diskUsage.Images))
+	fmt.Println("Volumes    :", len(diskUsage.Volumes))
+	fmt.Println("Builds     :", len(diskUsage.BuildCache))
 
 	var totalSize uint64
 	for _, container := range diskUsage.Containers {
@@ -66,45 +66,45 @@ func (v *View) ShowDiskUsage(diskUsage *types.DiskUsage) {
 		totalSize += uint64(build.Size)
 	}
 
-	fmt.Printf("Taille totale : %s\n\n", FormatSize(totalSize))
+	fmt.Printf("Total size: %s\n\n", FormatSize(totalSize))
 }
 
-// ShowContainers affiche la liste des conteneurs
+// ShowContainers displays the list of containers
 func (v *View) ShowContainers(containers []types.Container, dryRun bool) {
 	if len(containers) == 0 {
-		v.ShowSuccess("Aucun conteneur arrêté à supprimer.")
+		v.ShowSuccess("No stopped containers to remove.")
 		return
 	}
 
-	fmt.Printf("Trouvé %d conteneurs à supprimer.\n", len(containers))
+	fmt.Printf("Found %d containers to remove.\n", len(containers))
 
 	if dryRun {
-		v.ShowTitle("[DRY RUN] Les conteneurs suivants seraient supprimés:")
+		v.ShowTitle("[DRY RUN] The following containers would be removed:")
 		for _, container := range containers {
 			fmt.Printf(" - %s (%s)\n", container.ID[:12], strings.Join(container.Names, ", "))
 		}
 	}
 }
 
-// ShowContainerRemoved affiche un message pour un conteneur supprimé
+// ShowContainerRemoved displays a message for a removed container
 func (v *View) ShowContainerRemoved(containerID string, names []string) {
-	v.ShowSuccess(fmt.Sprintf("Conteneur supprimé: %s (%s)", containerID[:12], strings.Join(names, ", ")))
+	v.ShowSuccess(fmt.Sprintf("Container removed: %s (%s)", containerID[:12], strings.Join(names, ", ")))
 }
 
-// ShowContainersCleanupComplete affiche un message pour la fin du nettoyage des conteneurs
+// ShowContainersCleanupComplete displays a message for the end of container cleanup
 func (v *View) ShowContainersCleanupComplete() {
-	v.ShowSuccess("Conteneurs arrêtés supprimés avec succès.")
+	v.ShowSuccess("Stopped containers successfully removed.")
 }
 
-// ShowImages affiche la liste des images
+// ShowImages displays the list of images
 func (v *View) ShowImages(images []image.Summary, dryRun bool, imageType string) {
 	if len(images) == 0 {
-		v.ShowSuccess(fmt.Sprintf("Aucune image %s à supprimer.", imageType))
+		v.ShowSuccess(fmt.Sprintf("No %s images to remove.", imageType))
 		return
 	}
 
 	if dryRun {
-		v.ShowTitle(fmt.Sprintf("[DRY RUN] Les images %s suivantes seraient supprimées:", imageType))
+		v.ShowTitle(fmt.Sprintf("[DRY RUN] The following %s images would be removed:", imageType))
 		for _, image := range images {
 			tags := image.RepoTags
 			if len(tags) == 0 {
@@ -115,10 +115,10 @@ func (v *View) ShowImages(images []image.Summary, dryRun bool, imageType string)
 	}
 }
 
-// ShowImagesPruneResult affiche le résultat du nettoyage des images
+// ShowImagesPruneResult displays the result of image cleanup
 func (v *View) ShowImagesPruneResult(report image.PruneReport, imageType string) {
 	if len(report.ImagesDeleted) == 0 {
-		v.ShowSuccess(fmt.Sprintf("Aucune image %s à supprimer.", imageType))
+		v.ShowSuccess(fmt.Sprintf("No %s images to remove.", imageType))
 		return
 	}
 
@@ -127,74 +127,74 @@ func (v *View) ShowImagesPruneResult(report image.PruneReport, imageType string)
 			v.ShowSuccess(fmt.Sprintf("Image untagged: %s", img.Untagged))
 		}
 		if img.Deleted != "" {
-			v.ShowSuccess(fmt.Sprintf("Image supprimée: %s", img.Deleted))
+			v.ShowSuccess(fmt.Sprintf("Image deleted: %s", img.Deleted))
 		}
 	}
-	v.ShowSuccess(fmt.Sprintf("Images %s supprimées avec succès. Espace récupéré: %s", imageType, FormatSize(report.SpaceReclaimed)))
+	v.ShowSuccess(fmt.Sprintf("%s images successfully removed. Space reclaimed: %s", imageType, FormatSize(report.SpaceReclaimed)))
 }
 
-// ShowVolumes affiche la liste des volumes
+// ShowVolumes displays the list of volumes
 func (v *View) ShowVolumes(volumes []volume.Volume, dryRun bool) {
 	if len(volumes) == 0 {
-		v.ShowSuccess("Aucun volume non utilisé à supprimer.")
+		v.ShowSuccess("No unused volumes to remove.")
 		return
 	}
 
 	if dryRun {
-		v.ShowTitle("[DRY RUN] Les volumes suivants seraient supprimés:")
+		v.ShowTitle("[DRY RUN] The following volumes would be removed:")
 		for _, volume := range volumes {
 			fmt.Printf(" - %s\n", volume.Name)
 		}
 	}
 }
 
-// ShowVolumesPruneResult affiche le résultat du nettoyage des volumes
+// ShowVolumesPruneResult displays the result of volume cleanup
 func (v *View) ShowVolumesPruneResult(report volume.PruneReport) {
 	if len(report.VolumesDeleted) == 0 {
-		v.ShowSuccess("Aucun volume non utilisé à supprimer.")
+		v.ShowSuccess("No unused volumes to remove.")
 		return
 	}
 
 	for _, vol := range report.VolumesDeleted {
-		v.ShowSuccess(fmt.Sprintf("Volume supprimé: %s", vol))
+		v.ShowSuccess(fmt.Sprintf("Volume deleted: %s", vol))
 	}
-	v.ShowSuccess(fmt.Sprintf("Volumes non utilisés supprimés avec succès. Espace récupéré: %s", FormatSize(report.SpaceReclaimed)))
+	v.ShowSuccess(fmt.Sprintf("Unused volumes successfully removed. Space reclaimed: %s", FormatSize(report.SpaceReclaimed)))
 }
 
-// ShowNetworks affiche la liste des réseaux
+// ShowNetworks displays the list of networks
 func (v *View) ShowNetworks(networks []network.Summary, dryRun bool) {
 	if len(networks) == 0 {
-		v.ShowSuccess("Aucun réseau non utilisé à supprimer.")
+		v.ShowSuccess("No unused networks to remove.")
 		return
 	}
 
 	if dryRun {
-		v.ShowTitle("[DRY RUN] Les réseaux suivants seraient supprimés:")
+		v.ShowTitle("[DRY RUN] The following networks would be removed:")
 		for _, network := range networks {
 			fmt.Printf(" - %s (%s)\n", network.Name, network.ID[:12])
 		}
 	}
 }
 
-// ShowNetworksPruneResult affiche le résultat du nettoyage des réseaux
+// ShowNetworksPruneResult displays the result of network cleanup
 func (v *View) ShowNetworksPruneResult(report network.PruneReport) {
 	if len(report.NetworksDeleted) == 0 {
-		v.ShowSuccess("Aucun réseau non utilisé à supprimer.")
+		v.ShowSuccess("No unused networks to remove.")
 		return
 	}
 
 	for _, network := range report.NetworksDeleted {
-		v.ShowSuccess(fmt.Sprintf("Réseau supprimé: %s", network))
+		v.ShowSuccess(fmt.Sprintf("Network deleted: %s", network))
 	}
-	v.ShowSuccess("Réseaux non utilisés supprimés avec succès.")
+	v.ShowSuccess("Unused networks successfully removed.")
 }
 
-// ShowCleanupComplete affiche un message pour la fin du nettoyage global
+// ShowCleanupComplete displays a message for the end of global cleanup
 func (v *View) ShowCleanupComplete() {
-	v.ShowSuccess("\nNettoyage global terminé avec succès !")
+	v.ShowSuccess("\nGlobal cleanup completed successfully!")
 }
 
-// FormatSize formate une taille en octets en une unité lisible
+// FormatSize formats a size in bytes to a readable unit
 func FormatSize(size uint64) string {
 	const (
 		KB = 1024
@@ -214,10 +214,10 @@ func FormatSize(size uint64) string {
 	}
 }
 
-// ShowBuilds affiche la liste des builds
+// ShowBuilds displays the list of builds
 func (v *View) ShowBuilds(builds []types.BuildCache, dryRun bool) {
 	if len(builds) == 0 {
-		fmt.Println("Aucun build à nettoyer.")
+		fmt.Println("No builds to clean.")
 		return
 	}
 
@@ -226,22 +226,22 @@ func (v *View) ShowBuilds(builds []types.BuildCache, dryRun bool) {
 		mode = ""
 	}
 
-	fmt.Printf("%sBuilds qui seraient supprimés (%d):\n", mode, len(builds))
+	fmt.Printf("%sBuilds that would be removed (%d):\n", mode, len(builds))
 	for _, build := range builds {
 		fmt.Printf("- %s: %s\n", build.ID[:12], build.Description)
 	}
 }
 
-// ShowBuildsPruneResult affiche le résultat du nettoyage des builds
+// ShowBuildsPruneResult displays the result of builds cleanup
 func (v *View) ShowBuildsPruneResult(report *types.BuildCachePruneReport) {
 	if len(report.CachesDeleted) == 0 {
-		fmt.Println("Aucun build n'a été supprimé.")
+		fmt.Println("No builds were removed.")
 		return
 	}
 
-	fmt.Printf("Builds supprimés (%d):\n", len(report.CachesDeleted))
+	fmt.Printf("Builds removed (%d):\n", len(report.CachesDeleted))
 	for _, id := range report.CachesDeleted {
 		fmt.Printf("- %s\n", id[:12])
 	}
-	fmt.Printf("Espace libéré: %s\n", humanize.Bytes(uint64(report.SpaceReclaimed)))
+	fmt.Printf("Space freed: %s\n", humanize.Bytes(uint64(report.SpaceReclaimed)))
 }

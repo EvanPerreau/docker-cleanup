@@ -107,7 +107,7 @@ func (d *DockerClient) GetUnusedImages(olderThan int) ([]image.Summary, error) {
 	return unusedImages, nil
 }
 
-// PruneImages supprime les images non utilisées
+// PruneImages removes unused images
 func (d *DockerClient) PruneImages(olderThan int) (image.PruneReport, error) {
 	pruneFilters := filters.NewArgs()
 	if olderThan > 0 {
@@ -117,7 +117,7 @@ func (d *DockerClient) PruneImages(olderThan int) (image.PruneReport, error) {
 	return d.client.ImagesPrune(d.ctx, pruneFilters)
 }
 
-// GetDanglingImages obtient la liste des images dangling
+// GetDanglingImages gets the list of dangling images
 func (d *DockerClient) GetDanglingImages() ([]image.Summary, error) {
 	args := filters.NewArgs()
 	args.Add("dangling", "true")
@@ -125,28 +125,28 @@ func (d *DockerClient) GetDanglingImages() ([]image.Summary, error) {
 	return d.client.ImageList(d.ctx, image.ListOptions{Filters: args})
 }
 
-// PruneDanglingImages supprime les images dangling
+// PruneDanglingImages removes dangling images
 func (d *DockerClient) PruneDanglingImages() (image.PruneReport, error) {
 	pruneFilters := filters.NewArgs()
 	pruneFilters.Add("dangling", "true")
 	return d.client.ImagesPrune(d.ctx, pruneFilters)
 }
 
-// GetUnusedVolumes obtient la liste des volumes non utilisés
+// GetUnusedVolumes gets the list of unused volumes
 func (d *DockerClient) GetUnusedVolumes() ([]volume.Volume, error) {
-	// Obtenir tous les volumes
+	// Get all volumes
 	volumes, err := d.client.VolumeList(d.ctx, volume.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	// Obtenir tous les conteneurs pour voir quels volumes sont utilisés
+	// Get all containers to see which volumes are used
 	containers, err := d.client.ContainerList(d.ctx, container.ListOptions{All: true})
 	if err != nil {
 		return nil, err
 	}
 
-	// Mapper les noms des volumes utilisés
+	// Map the names of used volumes
 	usedVolumes := make(map[string]bool)
 	for _, container := range containers {
 		containerInfo, err := d.client.ContainerInspect(d.ctx, container.ID)
@@ -161,7 +161,7 @@ func (d *DockerClient) GetUnusedVolumes() ([]volume.Volume, error) {
 		}
 	}
 
-	// Filtrer les volumes non utilisés
+	// Filter unused volumes
 	var unusedVolumes []volume.Volume
 	for _, volume := range volumes.Volumes {
 		if !usedVolumes[volume.Name] {
@@ -172,27 +172,27 @@ func (d *DockerClient) GetUnusedVolumes() ([]volume.Volume, error) {
 	return unusedVolumes, nil
 }
 
-// PruneVolumes supprime les volumes non utilisés
+// PruneVolumes removes unused volumes
 func (d *DockerClient) PruneVolumes() (volume.PruneReport, error) {
 	pruneFilters := filters.NewArgs()
 	return d.client.VolumesPrune(d.ctx, pruneFilters)
 }
 
-// GetUnusedNetworks obtient la liste des réseaux non utilisés
+// GetUnusedNetworks gets the list of unused networks
 func (d *DockerClient) GetUnusedNetworks() ([]network.Summary, error) {
-	// Obtenir tous les réseaux
+	// Get all networks
 	networks, err := d.client.NetworkList(d.ctx, network.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	// Obtenir tous les conteneurs pour voir quels réseaux sont utilisés
+	// Get all containers to see which networks are used
 	containers, err := d.client.ContainerList(d.ctx, container.ListOptions{All: true})
 	if err != nil {
 		return nil, err
 	}
 
-	// Mapper les noms des réseaux utilisés
+	// Map the names of used networks
 	usedNetworks := make(map[string]bool)
 	for _, container := range containers {
 		containerInfo, err := d.client.ContainerInspect(d.ctx, container.ID)
@@ -205,13 +205,13 @@ func (d *DockerClient) GetUnusedNetworks() ([]network.Summary, error) {
 		}
 	}
 
-	// Ajouter les réseaux par défaut qui ne doivent pas être supprimés
+	// Add default networks that should not be removed
 	defaultNetworks := []string{"bridge", "host", "none"}
 	for _, network := range defaultNetworks {
 		usedNetworks[network] = true
 	}
 
-	// Filtrer les réseaux non utilisés
+	// Filter unused networks
 	var unusedNetworks []network.Summary
 	for _, network := range networks {
 		if !usedNetworks[network.Name] {
@@ -222,13 +222,13 @@ func (d *DockerClient) GetUnusedNetworks() ([]network.Summary, error) {
 	return unusedNetworks, nil
 }
 
-// PruneNetworks supprime les réseaux non utilisés
+// PruneNetworks removes unused networks
 func (d *DockerClient) PruneNetworks() (network.PruneReport, error) {
 	pruneFilters := filters.NewArgs()
 	return d.client.NetworksPrune(d.ctx, pruneFilters)
 }
 
-// GetUnusedBuilds obtient la liste des builds Docker non utilisés
+// GetUnusedBuilds gets the list of unused Docker builds
 func (d *DockerClient) GetUnusedBuilds() ([]types.BuildCache, error) {
 	// Get disk usage which includes build cache information
 	diskUsage, err := d.GetDiskUsage()
@@ -247,7 +247,7 @@ func (d *DockerClient) GetUnusedBuilds() ([]types.BuildCache, error) {
 	return builds, nil
 }
 
-// PruneBuilds supprime les builds Docker non utilisés
+// PruneBuilds removes unused Docker builds
 func (d *DockerClient) PruneBuilds(olderThan int) (*types.BuildCachePruneReport, error) {
 	pruneFilters := filters.NewArgs()
 

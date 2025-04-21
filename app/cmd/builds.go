@@ -10,12 +10,12 @@ import (
 
 var buildsCmd = &cobra.Command{
 	Use:   "builds",
-	Short: "Nettoie les builds Docker non utilisés",
-	Long:  `Supprime les builds Docker qui ne sont plus utilisés dans le système.`,
+	Short: "Clean unused Docker builds",
+	Long:  `Removes Docker builds that are no longer used in the system.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctrl, err := controllers.NewController()
 		if err != nil {
-			fmt.Printf("Erreur: %v\n", err)
+			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
 		defer ctrl.Close()

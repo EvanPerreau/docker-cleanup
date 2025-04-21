@@ -6,20 +6,20 @@ import (
 	"fmt"
 )
 
-// Config représente la configuration pour le contrôleur
+// Config represents the configuration for the controller
 type Config struct {
 	DryRun    bool
 	OlderThan int
 	ShowSize  bool
 }
 
-// Controller gère les interactions entre le modèle et la vue
+// Controller manages interactions between the model and view
 type Controller struct {
 	model *models.DockerClient
 	view  *views.View
 }
 
-// NewController crée une nouvelle instance de Controller
+// NewController creates a new Controller instance
 func NewController() (*Controller, error) {
 	dockerClient := models.NewDockerClient()
 
@@ -29,22 +29,22 @@ func NewController() (*Controller, error) {
 	}, nil
 }
 
-// Close ferme le client Docker
+// Close closes the Docker client
 func (c *Controller) Close() error {
 	return c.model.Close()
 }
 
-// RunContainerCleanup exécute le nettoyage des conteneurs
+// RunContainerCleanup executes the cleanup of containers
 func (c *Controller) RunContainerCleanup() {
 	if GetConfig().ShowSize {
 		c.ShowDiskUsage()
 	}
 
-	c.view.ShowTitle("Suppression des conteneurs arrêtés...")
+	c.view.ShowTitle("Removing stopped containers...")
 
 	containers, err := c.model.GetStoppedContainers()
 	if err != nil {
-		c.view.ShowError(fmt.Errorf("erreur lors de la récupération des conteneurs: %v", err))
+		c.view.ShowError(fmt.Errorf("error retrieving containers: %v", err))
 		return
 	}
 
@@ -53,7 +53,7 @@ func (c *Controller) RunContainerCleanup() {
 	if !GetConfig().DryRun && len(containers) > 0 {
 		for _, container := range containers {
 			if err := c.model.RemoveContainer(container.ID); err != nil {
-				c.view.ShowError(fmt.Errorf("erreur lors de la suppression du conteneur %s: %v", container.ID[:12], err))
+				c.view.ShowError(fmt.Errorf("error removing container %s: %v", container.ID[:12], err))
 			} else {
 				c.view.ShowContainerRemoved(container.ID, container.Names)
 			}
@@ -62,45 +62,45 @@ func (c *Controller) RunContainerCleanup() {
 	}
 }
 
-// RunImageCleanup exécute le nettoyage des images non utilisées
+// RunImageCleanup executes the cleanup of unused images
 func (c *Controller) RunImageCleanup() {
 	if GetConfig().ShowSize {
 		c.ShowDiskUsage()
 	}
 
-	c.view.ShowTitle("Suppression des images non utilisées...")
+	c.view.ShowTitle("Removing unused images...")
 
 	if GetConfig().DryRun {
 		images, err := c.model.GetUnusedImages(GetConfig().OlderThan)
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la récupération des images: %v", err))
+			c.view.ShowError(fmt.Errorf("error retrieving images: %v", err))
 			return
 		}
 
-		c.view.ShowImages(images, true, "non utilisées")
+		c.view.ShowImages(images, true, "unused")
 	} else {
 		report, err := c.model.PruneImages(GetConfig().OlderThan)
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la suppression des images: %v", err))
+			c.view.ShowError(fmt.Errorf("error removing images: %v", err))
 			return
 		}
 
-		c.view.ShowImagesPruneResult(report, "non utilisées")
+		c.view.ShowImagesPruneResult(report, "unused")
 	}
 }
 
-// RunDanglingCleanup exécute le nettoyage des images dangling
+// RunDanglingCleanup executes the cleanup of dangling images
 func (c *Controller) RunDanglingCleanup() {
 	if GetConfig().ShowSize {
 		c.ShowDiskUsage()
 	}
 
-	c.view.ShowTitle("Suppression des images dangling...")
+	c.view.ShowTitle("Removing dangling images...")
 
 	if GetConfig().DryRun {
 		images, err := c.model.GetDanglingImages()
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la récupération des images: %v", err))
+			c.view.ShowError(fmt.Errorf("error retrieving images: %v", err))
 			return
 		}
 
@@ -108,7 +108,7 @@ func (c *Controller) RunDanglingCleanup() {
 	} else {
 		report, err := c.model.PruneDanglingImages()
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la suppression des images dangling: %v", err))
+			c.view.ShowError(fmt.Errorf("error removing dangling images: %v", err))
 			return
 		}
 
@@ -116,19 +116,19 @@ func (c *Controller) RunDanglingCleanup() {
 	}
 }
 
-// RunVolumeCleanup exécute le nettoyage des volumes non utilisés
+// RunVolumeCleanup executes the cleanup of unused volumes
 func (c *Controller) RunVolumeCleanup() {
 
 	if GetConfig().ShowSize {
 		c.ShowDiskUsage()
 	}
 
-	c.view.ShowTitle("Suppression des volumes non utilisés...")
+	c.view.ShowTitle("Removing unused volumes...")
 
 	if GetConfig().DryRun {
 		volumes, err := c.model.GetUnusedVolumes()
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la récupération des volumes: %v", err))
+			c.view.ShowError(fmt.Errorf("error retrieving volumes: %v", err))
 			return
 		}
 
@@ -136,7 +136,7 @@ func (c *Controller) RunVolumeCleanup() {
 	} else {
 		report, err := c.model.PruneVolumes()
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la suppression des volumes: %v", err))
+			c.view.ShowError(fmt.Errorf("error removing volumes: %v", err))
 			return
 		}
 
@@ -144,18 +144,18 @@ func (c *Controller) RunVolumeCleanup() {
 	}
 }
 
-// RunNetworkCleanup exécute le nettoyage des réseaux non utilisés
+// RunNetworkCleanup executes the cleanup of unused networks
 func (c *Controller) RunNetworkCleanup() {
 	if GetConfig().ShowSize {
 		c.ShowDiskUsage()
 	}
 
-	c.view.ShowTitle("Suppression des réseaux non utilisés...")
+	c.view.ShowTitle("Removing unused networks...")
 
 	if GetConfig().DryRun {
 		networks, err := c.model.GetUnusedNetworks()
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la récupération des réseaux: %v", err))
+			c.view.ShowError(fmt.Errorf("error retrieving networks: %v", err))
 			return
 		}
 
@@ -163,7 +163,7 @@ func (c *Controller) RunNetworkCleanup() {
 	} else {
 		report, err := c.model.PruneNetworks()
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la suppression des réseaux: %v", err))
+			c.view.ShowError(fmt.Errorf("error removing networks: %v", err))
 			return
 		}
 
@@ -171,7 +171,7 @@ func (c *Controller) RunNetworkCleanup() {
 	}
 }
 
-// RunAllCleanup exécute le nettoyage de toutes les ressources Docker
+// RunAllCleanup executes the cleanup of all Docker resources
 func (c *Controller) RunAllCleanup() {
 	c.RunContainerCleanup()
 	fmt.Println()
@@ -188,29 +188,29 @@ func (c *Controller) RunAllCleanup() {
 	c.view.ShowCleanupComplete()
 }
 
-// ShowDiskUsage affiche l'utilisation du disque actuelle
+// ShowDiskUsage displays current disk usage
 func (c *Controller) ShowDiskUsage() {
 	diskUsage, err := c.model.GetDiskUsage()
 	if err != nil {
-		c.view.ShowError(fmt.Errorf("échec de l'obtention de l'utilisation du disque: %v", err))
+		c.view.ShowError(fmt.Errorf("failed to get disk usage: %v", err))
 		return
 	}
 
 	c.view.ShowDiskUsage(diskUsage)
 }
 
-// RunBuildsCleanup exécute le nettoyage des builds Docker non utilisés
+// RunBuildsCleanup executes the cleanup of unused Docker builds
 func (c *Controller) RunBuildsCleanup() {
 	if GetConfig().ShowSize {
 		c.ShowDiskUsage()
 	}
 
-	c.view.ShowTitle("Suppression des builds Docker...")
+	c.view.ShowTitle("Removing Docker builds...")
 
 	if GetConfig().DryRun {
 		builds, err := c.model.GetUnusedBuilds()
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la récupération des builds: %v", err))
+			c.view.ShowError(fmt.Errorf("error retrieving builds: %v", err))
 			return
 		}
 
@@ -218,7 +218,7 @@ func (c *Controller) RunBuildsCleanup() {
 	} else {
 		report, err := c.model.PruneBuilds(GetConfig().OlderThan)
 		if err != nil {
-			c.view.ShowError(fmt.Errorf("erreur lors de la suppression des builds: %v", err))
+			c.view.ShowError(fmt.Errorf("error removing builds: %v", err))
 			return
 		}
 
