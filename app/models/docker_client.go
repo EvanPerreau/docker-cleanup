@@ -227,3 +227,37 @@ func (d *DockerClient) PruneNetworks() (network.PruneReport, error) {
 	pruneFilters := filters.NewArgs()
 	return d.client.NetworksPrune(d.ctx, pruneFilters)
 }
+
+// GetUnusedBuilds obtient la liste des builds Docker non utilisés
+func (d *DockerClient) GetUnusedBuilds() ([]types.BuildCache, error) {
+	// Get disk usage which includes build cache information
+	diskUsage, err := d.GetDiskUsage()
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter unused build caches
+	var builds []types.BuildCache
+	for _, cache := range diskUsage.BuildCache {
+		if !cache.InUse {
+			builds = append(builds, *cache)
+		}
+	}
+
+	return builds, nil
+}
+
+// PruneBuilds supprime les builds Docker non utilisés
+func (d *DockerClient) PruneBuilds(olderThan int) (*types.BuildCachePruneReport, error) {
+	pruneFilters := filters.NewArgs()
+
+	if olderThan > 0 {
+		timestamp := time.Now().Add(-time.Hour * 24 * time.Duration(olderThan)).Format(time.RFC3339)
+		pruneFilters.Add("until", timestamp)
+	}
+
+	return d.client.BuildCachePrune(d.ctx, types.BuildCachePruneOptions{
+		All:     true, // This will prune all unused build cache
+		Filters: pruneFilters,
+	})
+}
